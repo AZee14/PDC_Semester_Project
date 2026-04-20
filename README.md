@@ -1,81 +1,146 @@
-HOW TO RUN THIS ON YOUR SYSTEM: (MUST HAVE WSL, HADOOP AND DOCKER INSTALLED)
+# 🏭 Industrial IoT Distributed Log Processing System
 
-Step 1: Get the Code & Setup Folders
-Open your WSL terminal and run:
+A fault-tolerant, distributed Big Data pipeline that simulates real-time Industrial IoT analytics. This system ingests simulated continuous sensor data, stores it across a distributed file system (HDFS), processes it in parallel using Hadoop MapReduce, and visualizes the aggregated metrics on a live dashboard.
 
-Bash
+-----
+
+## 🚀 How to Run This on Your System
+
+**⚠️ Prerequisites:** You MUST have **WSL (Ubuntu)**, **Hadoop**, and **Docker Desktop** installed and running on your machine before starting.
+
+### Step 1: Get the Code & Setup Folders
+
+Open your WSL terminal and clone the repository:
+
+```bash
 git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 cd YOUR_REPO_NAME
+
+# Create the necessary local directories
 mkdir -p data/staging data/archive data/mr_scripts
+```
 
-Step 2: Turn on the Hadoop Cluster
+*(Note: Replace `YOUR_USERNAME/YOUR_REPO_NAME` with your actual GitHub details).*
 
-Bash
+### Step 2: Turn on the Hadoop Cluster
+
+Boot up the distributed Docker network:
+
+```bash
 docker compose up -d
-(Wait a few minutes for it to download and start. Check http://localhost:9870 in your browser to verify 3 DataNodes are alive).
+```
 
-Step 3: Setup the Hadoop Internal Folders & Python
-Run these to prepare the distributed file system and install Python on the master node:
+> **Verify:** Wait a few minutes for the images to download and start. Check [http://localhost:9870](https://www.google.com/search?q=http://localhost:9870) in your browser. Go to the "Datanodes" tab to verify exactly **3 Live Nodes** are running.
 
-Bash
+### Step 3: Setup the Hadoop Internal Folders & Python
+
+Run these commands to prepare the Hadoop Distributed File System (HDFS) and install Python on the master node so it can execute our MapReduce logic:
+
+```bash
 docker exec namenode hdfs dfs -mkdir -p /iot/input/raw
 docker exec namenode hdfs dfs -mkdir -p /iot/output
 docker exec -u root namenode bash -c "echo 'deb http://archive.debian.org/debian buster main' > /etc/apt/sources.list && apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y python3"
-Step 4: Start the Factory (Open 4 Terminal Windows)
-Open 4 separate WSL tabs, cd into the scripts folder in each, and run these one by one:
+```
 
-Tab 1: python3 stream_simulator.py (Generates data)
+### Step 4: Start the Factory (The Pipeline)
 
-Tab 2: ./ingest.sh (Pushes data to HDFS)
+To simulate the factory, you need to open **4 separate WSL tabs**. In each tab, navigate to the `scripts` folder (`cd scripts`) and run the following commands one by one:
 
-Tab 3: ./run_pipeline.sh (Runs MapReduce processing)
+  * **Tab 1 (The Streamer):** Generates the simulated sensor data.
+    ```bash
+    python3 stream_simulator.py
+    ```
+  * **Tab 2 (The Ingestor):** Pushes the local micro-batches into HDFS.
+    ```bash
+    ./ingest.sh
+    ```
+  * **Tab 3 (The Brains):** Orchestrates the MapReduce jobs and merges the state.
+    ```bash
+    ./run_pipeline.sh
+    ```
+  * **Tab 4 (The Face):** Starts the Streamlit User Interface.
+    ```bash
+    python3 -m streamlit run dashboard.py
+    ```
 
-Tab 4: python3 -m streamlit run dashboard.py (Starts the UI)
+🎉 **View the Dashboard:** Go to [http://localhost:8501](https://www.google.com/search?q=http://localhost:8501) to see the live analytics\!
 
-Go to http://localhost:8501 to see the live dashboard!
-To test the fault tolerance, open a 5th tab and type docker stop datanode2. Watch the dashboard survive!
+> **💥 The Chaos Test (Fault Tolerance):** To prove the system survives hardware failure, open a 5th terminal tab while the system is running and type `docker stop datanode2`. Watch the dashboard seamlessly recover and continue updating\!
 
+-----
 
-DATASET GENERATION BACKGROUND AND WORKING:
-🏭 1. The Dataset Generation (The "What" and "Why")
-What it is:
-The generate_dataset.py script creates a 50,000-row CSV file. Every single row represents a single "ping" or reading from a factory machine at a specific second in time.
+## ⚙️ Dataset Generation & Architecture
+
+### 1\. The Dataset (The "What" and "Why")
+
+The `generate_dataset.py` script creates a simulated factory dataset. Every single row represents a single "ping" or reading from a factory machine at a specific second in time.
 
 The data looks like this:
+
+```text
 2026-04-20 14:05:01, MACH-004, 86.5, ERROR, E-99
+```
 
-What it means (The Real-World Scenario):
+**Real-World Scenario Mapping:**
 
-machine_id: You have 10 factory machines (MACH-001 to MACH-010).
+  * `machine_id`: The factory contains 10 machines (`MACH-001` to `MACH-010`).
+  * `temperature`: The script randomly generates a temperature reading for each machine.
+  * `error_code`: Hardcoded logic dictates that if a machine's temperature randomly spikes above 85°C, it forces an `E-99` (Overheating) error.
 
-temperature: The script randomly generates a temperature for the machine.
+**Why we simulate streaming:**
+In a real factory, you don't get a massive Excel file at the end of the day. Machines send data continuously. Our `stream_simulator.py` mimics this reality by chopping the massive dataset into tiny "micro-batches" (100 rows at a time) and dripping them into the system every 5 seconds.
 
-error_code: The script is hardcoded with a rule: If a machine's temperature randomly spikes above 85°C, it forces an "E-99" (Overheating) error. Why we simulate streaming:
-In a real factory, you don't get a 50,000-row Excel file at the end of the day. The machines send data continuously, every single second. Our stream_simulator.py mimics this reality by chopping that massive dataset into tiny "micro-batches" (100 rows at a time) and dripping them into the system every 5 seconds.
+### 2\. What MapReduce Accomplishes (The "Brain")
 
-🧠 2. What MapReduce Accomplishes (The "Brain")
-MapReduce is Google's famous two-step algorithm for processing massive amounts of data across multiple computers without crashing.
-Instead of asking one computer to read a million rows (which takes forever), MapReduce splits the work into two phases: The Map Phase and The Reduce Phase.
+MapReduce is Google's famous algorithm for processing massive amounts of data across multiple computers without crashing. Instead of asking one computer to read a million rows, MapReduce splits the work into two phases.
 
-🔹 Phase 1: The Mapper (The "Extractor")
-The Mapper looks at the raw data line-by-line. Its only job is to filter out the noise and extract what we care about: Errors.
-If the Mapper reads a line where the machine is perfectly fine, it ignores it.
-If it reads a line where MACH-004 has an E-99 error, it immediately outputs two separate tags:
+#### 🔹 Phase 1: The Mapper (The "Extractor")
 
-ERR_MACHINE_MACH-004    1 (Translation: "Hey, I found 1 error for Machine 4!")
+The Mapper looks at the raw data line-by-line. Its only job is to filter out the noise and extract what we care about: Errors. If it reads a line where `MACH-004` has an `E-99` error, it immediately outputs two separate key-value tags:
 
-ERR_CODE_E-99           1 (Translation: "Hey, I found 1 E-99 error!")
+> `ERR_MACHINE_MACH-004    1`  *(Translation: "I found 1 error for Machine 4\!")*
+> `ERR_CODE_E-99           1`  *(Translation: "I found 1 E-99 error\!")*
 
-The Mapper doesn't do any math. It just blindly shouts "1" every time it sees a problem. Because you have 3 DataNodes, multiple Mappers are doing this simultaneously across different chunks of your data file.
+Because you have 3 DataNodes, multiple Mappers do this simultaneously across different chunks of the data file.
 
-🔹 Phase 2: The Reducer (The "Calculator")
-Hadoop takes all those millions of scattered "1s" generated by the Mappers, sorts them alphabetically, and hands them to the Reducer.
+#### 🔹 Phase 2: The Reducer (The "Calculator")
 
-The Reducer is simply a calculator. It looks at the sorted list and says:
+Hadoop takes all those scattered "1s", sorts them, and hands them to the Reducer. The Reducer acts as an aggregator:
 
-"I see six 1s for MACH-004. I will output: ERR_MACHINE_MACH-004: 6."
+> *"I see six 1s for MACH-004. Output -\> `ERR_MACHINE_MACH-004: 6`."*
+> *"I see twenty-eight 1s for E-99. Output -\> `ERR_CODE_E-99: 28`."*
 
-"I see twenty-eight 1s for E-99. I will output: ERR_CODE_E-99: 28."
+**🏆 The Ultimate Goal:** By extracting in parallel (Map) and aggregating the final math (Reduce), MapReduce allows the system to process terabytes of factory logs in seconds, turning messy sensor data into the clean, summarized JSON numbers that power the dashboard.
 
-🏆 The Ultimate Goal
-By splitting the job into Mapping (extracting data in parallel) and Reducing (aggregating the final math), MapReduce allows your system to process gigabytes or terabytes of factory logs in seconds. It turns raw, messy sensor data into the clean, summarized JSON numbers that power your live dashboard.
+-----
+
+## 🔐 GitHub Authentication (Required for Contributing)
+
+In 2021, GitHub removed the ability to use your account password to push code from the terminal. If you try to run `git push` with your normal password, you will get an `Authentication failed` error.
+
+To push code to this repository, you must generate a **Personal Access Token (PAT)**.
+
+### How to set up your Token:
+
+1.  Log in to [GitHub.com](https://github.com/).
+2.  Go to **Settings** (click your profile picture in the top right).
+3.  Scroll down the left menu and click **Developer settings** -\> **Personal access tokens** -\> **Tokens (classic)**.
+4.  Click **Generate new token (classic)**.
+5.  Name it something like "WSL Project Token" and set the expiration to 30 or 90 days.
+6.  **Important:** Check the box next to **`repo`** to give it permission to push code.
+7.  Click **Generate** at the bottom and **copy the token immediately** (it starts with `ghp_`).
+
+### How to use it:
+
+When you run your first `git push`, the terminal will ask for your username and password.
+
+  * **Username:** Your GitHub username
+  * **Password:** *Paste your new token here (Ctrl+Shift+V or Right-Click).* \> *Note: Linux hides passwords as you type, so nothing will show up on the screen. Just paste it and press Enter.*
+
+### 💡 Pro-Tip: Don't enter it every time\!
+
+To force Git to remember your token so you never have to paste it again, run this command in your terminal *before* you push:
+
+```bash
+git config --global credential.helper store
+```
