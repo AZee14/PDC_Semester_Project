@@ -1,4 +1,4 @@
-# Industrial IoT Distributed Log Processing System
+# BIGLOG - An Industrial IoT Distributed Log Processing System
 
 A fault-tolerant, distributed Big Data pipeline that simulates real-time Industrial IoT analytics. This system ingests simulated continuous sensor data, stores it across a distributed file system (HDFS), processes it in parallel using Hadoop MapReduce, and visualizes the aggregated metrics on a live dashboard.
 
