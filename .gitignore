@@ -8,3 +8,7 @@ data/master_state.json
 # Ignore Python cache files
 __pycache__/
 .ipynb_checkpoints/
+venv/
+__pycache__/
+*.pyc
+.env
