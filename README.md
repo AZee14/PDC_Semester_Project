@@ -1,12 +1,12 @@
-# 🏭 Industrial IoT Distributed Log Processing System
+# Industrial IoT Distributed Log Processing System
 
 A fault-tolerant, distributed Big Data pipeline that simulates real-time Industrial IoT analytics. This system ingests simulated continuous sensor data, stores it across a distributed file system (HDFS), processes it in parallel using Hadoop MapReduce, and visualizes the aggregated metrics on a live dashboard.
 
 -----
 
-## 🚀 How to Run This on Your System
+## How to Run This on Your System
 
-**⚠️ Prerequisites:** You MUST have **WSL (Ubuntu)**, **Hadoop**, and **Docker Desktop** installed and running on your machine before starting.
+**Prerequisites:** You MUST have **WSL (Ubuntu)**, **Hadoop**, and **Docker Desktop** installed and running on your machine before starting.
 
 ### Step 1: Get the Code & Setup Folders
 
@@ -63,9 +63,9 @@ To simulate the factory, you need to open **4 separate WSL tabs**. In each tab, 
     python3 -m streamlit run dashboard.py
     ```
 
-🎉 **View the Dashboard:** Go to [http://localhost:8501](https://www.google.com/search?q=http://localhost:8501) to see the live analytics\!
+**View the Dashboard:** Go to [http://localhost:8501](https://www.google.com/search?q=http://localhost:8501) to see the live analytics\!
 
-> **💥 The Chaos Test (Fault Tolerance):** To prove the system survives hardware failure, open a 5th terminal tab while the system is running and type `docker stop datanode2`. Watch the dashboard seamlessly recover and continue updating\!
+> **The Chaos Test (Fault Tolerance):** To prove the system survives hardware failure, open a 5th terminal tab while the system is running and type `docker stop datanode2`. Watch the dashboard seamlessly recover and continue updating\!
 
 -----
 
@@ -110,11 +110,11 @@ Hadoop takes all those scattered "1s", sorts them, and hands them to the Reducer
 > *"I see six 1s for MACH-004. Output -\> `ERR_MACHINE_MACH-004: 6`."*
 > *"I see twenty-eight 1s for E-99. Output -\> `ERR_CODE_E-99: 28`."*
 
-**🏆 The Ultimate Goal:** By extracting in parallel (Map) and aggregating the final math (Reduce), MapReduce allows the system to process terabytes of factory logs in seconds, turning messy sensor data into the clean, summarized JSON numbers that power the dashboard.
+**The Ultimate Goal:** By extracting in parallel (Map) and aggregating the final math (Reduce), MapReduce allows the system to process terabytes of factory logs in seconds, turning messy sensor data into the clean, summarized JSON numbers that power the dashboard.
 
 -----
 
-## 🔐 GitHub Authentication (Required for Contributing)
+## GitHub Authentication (Required for Contributing)
 
 In 2021, GitHub removed the ability to use your account password to push code from the terminal. If you try to run `git push` with your normal password, you will get an `Authentication failed` error.
 
@@ -137,7 +137,7 @@ When you run your first `git push`, the terminal will ask for your username and 
   * **Username:** Your GitHub username
   * **Password:** *Paste your new token here (Ctrl+Shift+V or Right-Click).* \> *Note: Linux hides passwords as you type, so nothing will show up on the screen. Just paste it and press Enter.*
 
-### 💡 Pro-Tip: Don't enter it every time\!
+### Pro-Tip: Don't enter it every time\!
 
 To force Git to remember your token so you never have to paste it again, run this command in your terminal *before* you push:
 
