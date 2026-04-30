@@ -42,7 +42,7 @@ while True:
 
     # 4. Draw the UI inside the placeholder
     with placeholder.container():
-        st.title("🏭 Live Industrial IoT Dashboard")
+        st.title("Live Industrial IoT Dashboard")
         st.markdown("Monitoring distributed Hadoop cluster processing in real-time.")
         
         # Big metric number
@@ -54,14 +54,14 @@ while True:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("⚠️ Errors per Machine")
+            st.subheader("Errors per Machine")
             if not df_machines.empty:
                 st.bar_chart(df_machines.set_index("Machine"))
             else:
                 st.info("Waiting for machine data...")
 
         with col2:
-            st.subheader("📊 Error Code Frequency")
+            st.subheader("Error Code Frequency")
             if not df_codes.empty:
                 st.bar_chart(df_codes.set_index("Error Code"))
             else:
