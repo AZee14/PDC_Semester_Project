@@ -3,12 +3,16 @@ import time
 import os
 from datetime import datetime
 
+# Simulates the factory sensor data
+# Creates a CSV file with random temperature readings for 10 machines
+# Drops batches of 100 records every 5 seconds into the staging directory
+
 INPUT_FILE = "../data/raw_iot_data.csv"
 STAGING_DIR = "../data/staging/"
 BATCH_SIZE = 100  # How many records per batch
 SLEEP_TIME = 5    # Seconds between batches
 
-print("🚀 Starting IoT Sensor Simulator...")
+print("Starting IoT Sensor Simulator...")
 print(f"Dropping {BATCH_SIZE} records every {SLEEP_TIME} seconds.")
 print("Press Ctrl+C to stop.")
 
@@ -33,7 +37,7 @@ try:
                     writer.writerow(header)
                     writer.writerows(current_batch)
                 
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 📦 Dropped batch {batch_num} into staging.")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Dropped batch {batch_num} into staging.")
                 
                 # Reset for next batch and wait
                 current_batch = []
@@ -41,4 +45,4 @@ try:
                 time.sleep(SLEEP_TIME)
 
 except KeyboardInterrupt:
-    print("\n🛑 Simulator stopped by user.")
+    print("\nSimulator stopped by user.")
