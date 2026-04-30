@@ -1,12 +1,13 @@
+# Merge the new Hadoop output file with the existing master state
 import json
 import os
 import sys
 
 STATE_FILE = "../data/master_state.json"
 
-# We will pass the downloaded Hadoop output file as an argument
+# Pass the downloaded Hadoop output file as an argument
 if len(sys.argv) < 2:
-    print("❌ Error: Please provide the path to the MapReduce output file.")
+    print("Error: Please provide the path to the MapReduce output file.")
     sys.exit(1)
 
 NEW_DATA_FILE = sys.argv[1]
@@ -38,4 +39,4 @@ with open(NEW_DATA_FILE, 'r') as f:
 with open(STATE_FILE, 'w') as f:
     json.dump(state, f, indent=4)
 
-print("✅ Master state updated successfully! Current Total Records:", state["TOTAL_RECORDS"])
+print("Master state updated successfully! Current Total Records:", state["TOTAL_RECORDS"])
