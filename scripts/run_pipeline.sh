@@ -1,13 +1,14 @@
 #!/bin/bash
-
-echo "🏭 Starting Continuous Factory Pipeline..."
+# Runs mapreduce jobs and merges the results with the master state
+# Cleans up the processed files and moves them to an archive folder
+echo "Starting Continuous Factory Pipeline..."
 
 while true; do
     # 1. Check if there are any CSV files waiting in HDFS
     FILES=$(docker exec namenode hdfs dfs -ls /iot/input/raw 2>/dev/null | grep "\.csv")
     
     if [ -z "$FILES" ]; then
-        echo "⏳ No new data in HDFS. Waiting 5 seconds..."
+        echo "No new data in HDFS. Waiting 5 seconds..."
         sleep 5
         continue
     fi
@@ -29,7 +30,7 @@ while true; do
 
     # 3. Check if the job was successful
     if [ $? -eq 0 ]; then
-        echo "✅ MapReduce finished!"
+        echo "MapReduce finished!"
         
         # Pull the results and save them locally
         docker exec namenode hdfs dfs -cat $OUT_DIR/part-00000 > ../data/temp_results.txt
@@ -40,10 +41,10 @@ while true; do
         # 4. Clean up: Move the processed files to an archive folder in HDFS
         docker exec namenode hdfs dfs -mkdir -p /iot/archive
         docker exec namenode hdfs dfs -mv /iot/input/raw/*.csv /iot/archive/
-        echo "🧹 Cleaned up processed files."
+        echo "Cleaned up processed files."
         
     else
-        echo "❌ Job failed or is recovering from a node failure..."
+        echo "Job failed or is recovering from a node failure..."
     fi
     
     echo "-----------------------------------"
